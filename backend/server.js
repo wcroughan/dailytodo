@@ -16,6 +16,7 @@ client.connect(err => {
         console.log(err);
         client.close();
     } else {
+        console.log("Connected to Mongo!")
         const mydb = client.db("testdb");
         try {
             mydb.command({ ping: 1 });

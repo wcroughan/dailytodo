@@ -2,10 +2,7 @@
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png" />
     <date-browser @dayChosen="dayChosen($event)" />
-    <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
-    <!-- <todo-item title="Test 1" @boxChecked="logCheck($event)" /> -->
-    <!-- <todo-item title="Test 2" @boxChecked="logCheck($event)" /> -->
-    <list-of-lists :listIdPrefix="listIdPrefix" />
+    <list-of-lists :dateString="dateString" />
   </div>
 </template>
 
@@ -24,7 +21,7 @@ export default {
   },
   data() {
     return {
-      listIdPrefix: this.currentDayID(),
+      dateString: this.currentDayID(),
     };
   },
   methods: {
@@ -37,8 +34,8 @@ export default {
       );
     },
     dayChosen(day) {
-      this.listIdPrefix = day;
-      console.log("received dayChosen: ", day, this.listIdPrefix);
+      this.dateString = day;
+      console.log("received dayChosen: ", day, this.dateString);
     },
   },
 };

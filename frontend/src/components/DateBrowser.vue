@@ -104,10 +104,10 @@ export default {
       const id = this.weekIdFromDate(dateobj);
       if (this.weeks[id] === undefined) {
         this.weeks[id] = this.createWeekObject(dateobj);
-        console.log("adding id to outstanding weeks: ", id);
+        // console.log("adding id to outstanding weeks: ", id);
         this.outstandingWeeks.push(id);
       } else {
-        console.log("Found lookup for week with id ", id);
+        // console.log("Found lookup for week with id ", id);
       }
       return this.weeks[id];
     },
@@ -118,9 +118,9 @@ export default {
       };
       const params = new URLSearchParams(reqParamObj);
       const backend_request = backend_url + `weeks_info?${params}`;
-      console.log(backend_request);
+      //   console.log(backend_request);
       axios.get(backend_request).then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         this.weeks = {
           ...this.weeks,
           ...res.data,
@@ -135,9 +135,9 @@ export default {
       };
       const params = new URLSearchParams(reqParamObj);
       const backend_request = backend_url + `days_info?${params}`;
-      console.log(backend_request);
+      //   console.log(backend_request);
       axios.get(backend_request).then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         this.days = {
           ...this.days,
           ...res.data,
@@ -180,10 +180,10 @@ export default {
       const id = this.dayIdFromDate(dateobj);
       if (this.days[id] === undefined) {
         this.days[id] = this.createDayObject(dateobj);
-        console.log("adding id to outstanding days: ", id);
+        // console.log("adding id to outstanding days: ", id);
         this.outstandingDays.push(id);
       } else {
-        console.log("Found lookup for day with id ", id);
+        // console.log("Found lookup for day with id ", id);
       }
       return this.days[id];
     },

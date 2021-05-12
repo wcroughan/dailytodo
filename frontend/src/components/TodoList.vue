@@ -25,6 +25,8 @@
 import TodoListBody from "./TodoListBody.vue";
 import TodoListFooter from "./TodoListFooter.vue";
 import TodoListHeader from "./TodoListHeader.vue";
+import axios from "axios";
+import { backend_url } from "./dtConstants";
 
 export default {
   name: "TodoList",
@@ -33,42 +35,34 @@ export default {
   },
   data() {
     return {
+      title: "Loading...",
       deadline: null,
-      listItems: [
-        {
-          id: 0,
-          title: "test1",
-          isDone: true,
-        },
-        {
-          id: 1,
-          title: "asdfasdf",
-          isDone: true,
-        },
-        {
-          id: 2,
-          title: "new ish",
-          isDone: false,
-        },
-      ],
-      defaultItems: [
-        {
-          id: 0,
-          title: "test1",
-          isDone: false,
-        },
-        {
-          id: 1,
-          title: "asdfasdf",
-          isDone: false,
-        },
-      ],
+      listItems: [],
+      listCache: {},
       backupItemList: [],
-      backupDefaultItemList: [],
+      canceledLoadDefault: false,
     };
   },
   components: { TodoListHeader, TodoListBody, TodoListFooter },
   methods: {
+    requestListFromServer(id) {
+      const reqParamObj = {
+        id: id,
+      };
+      const params = new URLSearchParams(reqParamObj);
+      const backend_request = backend_url + `list?${params}`;
+      console.log(backend_request);
+      axios.get(backend_request).then((res) => {
+        console.log(res.data);
+        this.listCache[id] = res.data;
+
+        console.log(this.listId, id);
+        if (this.listId == id) {
+          this.listItems = this.listCache[id].listItems;
+          this.title = this.listCache[id].listTitle;
+        }
+      });
+    },
     checkboxStatesChanged(state, id) {
       this.listItems[id].isDone = state;
     },
@@ -78,10 +72,23 @@ export default {
     },
     loadDefault() {
       this.backupItemList = this.listItems;
-      this.listItems = [...this.defaultItems];
-      for (let li of this.listItems) li.isDone = false;
+
+      this.canceledLoadDefault = false;
+      const reqParamObj = {
+        id: this.listId,
+        default: true,
+      };
+      const params = new URLSearchParams(reqParamObj);
+      const backend_request = backend_url + `list?${params}`;
+      console.log(backend_request);
+      axios.get(backend_request).then((res) => {
+        console.log(res.data);
+        if (!this.canceledLoadDefault) this.listItems = res.data.listItems;
+      });
     },
     undoLoadDefault() {
+      //TODO this doesn't work with also switching days
+      this.canceledLoadDefault = true;
       this.listItems = this.backupItemList;
     },
     saveDefault() {
@@ -92,10 +99,21 @@ export default {
       this.defaultItems = this.backupDefaultItemList;
     },
   },
-  computed: {
-    title() {
-      return this.listId;
+  created() {
+    this.requestListFromServer(this.listId);
+  },
+  watch: {
+    listId(newval) {
+      const cacheval = this.listCache[newval];
+      if (cacheval === undefined) {
+        this.requestListFromServer(this.listId);
+      } else {
+        this.listItems = cacheval.listItems;
+        this.title = cacheval.listTitle;
+      }
     },
+  },
+  computed: {
     numItems() {
       return this.listItems.length;
     },
