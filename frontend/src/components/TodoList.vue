@@ -8,6 +8,8 @@
     <todo-list-body
       :listItems="listItems"
       @checkboxStatesChanged="checkboxStatesChanged"
+      @itemAdded="itemAdded($event)"
+      @itemRemoved="itemRemoved($event)"
     />
     <todo-list-footer
       :isAllDone="isAllDone"
@@ -170,12 +172,34 @@ export default {
       //   console.log(backend_request, reqParamObj);
       axios.post(backend_request, reqParamObj);
     },
+    itemAdded(item) {
+      const newItem = {
+        id: this.nextItemID,
+        isDone: false,
+        title: item,
+      };
+      this.listItems.push(newItem);
+      this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
+    },
+    itemRemoved(item) {
+      console.log("Got request to delete item ", item);
+      for (let i = 0; i < this.listItems.length; i++) {
+        if (this.listItems[i].id === item) {
+          this.listItems.splice(i, 1);
+          break;
+        }
+      }
+      console.log("List items is now ", this.listItems);
+      this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
+    },
   },
   created() {
     this.requestListFromServer(this.listId);
   },
   watch: {
     listId(newval) {
+      this.undoLoadDefaultPending = false;
+      this.undoSaveDefaultPending = false;
       const cacheval = this.listCache[newval];
       if (cacheval === undefined) {
         this.requestListFromServer(this.listId);
@@ -204,6 +228,9 @@ export default {
     },
     isAllDone() {
       return this.listItems.reduce((a, v) => (v.isDone ? a : false), true);
+    },
+    nextItemID() {
+      return Math.max(...this.listItems.map((v) => v.id)) + 1;
     },
   },
 };

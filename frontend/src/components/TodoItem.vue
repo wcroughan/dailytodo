@@ -13,7 +13,7 @@
       <component :is="modelValue ? 's' : 'b'">{{ title }}</component>
     </div>
     <div class="todo-item-remove-button">
-      <button>Remove</button>
+      <button @click="$emit('remove')">Remove</button>
     </div>
     <!-- <div class="todo-item-spacer" /> -->
     <!-- <br /> -->
@@ -30,7 +30,7 @@ export default {
     title: String,
     modelValue: Boolean,
   },
-  emits: ["update:modelValue"],
+  emits: ["update:modelValue", "remove"],
   mounted() {
     // console.log(this.title, this.modelValue);
   },

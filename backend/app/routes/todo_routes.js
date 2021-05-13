@@ -527,58 +527,5 @@ module.exports = function (app, db) {
         }
     });
 
-
-
-    app.put('/lists/:id', (req, res) => {
-        console.log("in unused put func");
-        const id = req.params.id;
-        const details = { '_id': new ObjectID(id) };
-        const note = { title: req.body.title, body: req.body.body };
-        db.collection("notes").updateOne(details, note, (err) => {
-            if (err) {
-                console.log(err);
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send({ 'error': "error occured" });
-            } else {
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send(note);
-            }
-        });
-    });
-
-    app.post('/lists', (req, res) => {
-        console.log("in unused post func");
-        const note = { title: req.body.title, body: req.body.body };
-        db.collection("notes").insertOne(note, (err, result) => {
-            if (err) {
-                console.log(err);
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send({ 'error': "error occured" });
-            } else {
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send(result.ops[0]);
-            }
-
-        });
-    });
-
-    app.delete('/lists/:id', (req, res) => {
-        console.log("in unused delete func");
-        const id = req.params.id;
-        const details = { '_id': new ObjectID(id) };
-        db.collection("notes").deleteOne(details, (err, item) => {
-            if (err) {
-                console.log(err);
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send({ 'error': "error occured" });
-            } else {
-                res.header("Access-Control-Allow-Origin", "*");
-                res.send('deleted ' + id + ' successfully');
-            }
-
-        });
-    });
-
-
 };
 

@@ -4,16 +4,19 @@
       v-for="item in listItems"
       :modelValue="item.isDone"
       @update:modelValue="checkboxUpdate($event, item.id)"
+      @remove="removeItem(item.id)"
       :key="item.id"
       :title="item.title"
     />
+    <todo-item-input @addItem="addItem($event)" />
   </div>
 </template>
 
 <script>
 import TodoItem from "./TodoItem.vue";
+import TodoItemInput from "./TodoItemInput.vue";
 export default {
-  components: { TodoItem },
+  components: { TodoItem, TodoItemInput },
   name: "TodoListBody",
   props: {
     listItems: Array,
@@ -25,6 +28,12 @@ export default {
   methods: {
     checkboxUpdate(checkBoxState, id) {
       this.$emit("checkboxStatesChanged", checkBoxState, id);
+    },
+    addItem(item) {
+      this.$emit("itemAdded", item);
+    },
+    removeItem(item) {
+      this.$emit("itemRemoved", item);
     },
   },
 };
