@@ -2,7 +2,6 @@
   <div class="todo-list">
     <todo-list-header
       :title="title"
-      :deadline="deadline"
       :numRemaining="numRemaining"
       :numItems="numItems"
     />
@@ -12,11 +11,13 @@
     />
     <todo-list-footer
       :isAllDone="isAllDone"
+      :undoLoadDefaultPending="undoLoadDefaultPending"
+      :undoSaveDefaultPending="undoSaveDefaultPending"
+      :isSkipped="isSkipped"
       @toggleAll="toggleAll"
-      @loadDefault="loadDefault"
-      @undoLoadDefault="undoLoadDefault"
-      @saveDefault="saveDefault"
-      @undoSaveDefault="undoSaveDefault"
+      @toggleSkipped="toggleSkipped"
+      @loadDefault="loadDefaultClicked(listId)"
+      @saveDefault="saveDefaultClicked(listId)"
     />
   </div>
 </template>
@@ -33,34 +34,31 @@ export default {
   props: {
     listId: String,
   },
+  emits: ["listInfoUpdate"],
   data() {
     return {
       title: "Loading...",
-      deadline: null,
-      listItems: [],
+      listItems: [{ id: 0, isDone: false, title: "Loading..." }],
       listCache: {},
-      backupItemList: [],
       canceledLoadDefault: false,
+      undoLoadDefaultPending: false,
+      undoSaveDefaultPending: false,
+      isSkipped: false,
     };
   },
   components: { TodoListHeader, TodoListBody, TodoListFooter },
   methods: {
-    sendListUpdateToServer(items, id) {
+    sendListUpdateToServer(items, id, skipped) {
       this.listCache[id].listItems = items;
-      //   const reqParamObj = {
-      // data: this.listCache[id],
-      //   };
-      const reqParamObj = { test: true };
-      //   const config = { headers: { "Access-Control-Allow-Origin": "*" } };
-      //   const params = new URLSearchParams(reqParamObj);
-      //   const backend_request = backend_url + `list?${params}`;
-      //   const backend_request = backend_url + "list/" + id;
+      this.listCache[id].isSkipped = skipped;
+      const reqParamObj = {
+        data: this.listCache[id],
+      };
       const backend_request = backend_url + "list";
-      console.log(backend_request);
-      console.log(reqParamObj);
-      axios.put(backend_request, reqParamObj).then((res) => {
-        console.log(res.data);
-      });
+      axios.put(backend_request, reqParamObj);
+      //   .then((res) => {
+      // console.log(res.data);
+      //   });
     },
     requestListFromServer(id) {
       const reqParamObj = {
@@ -68,30 +66,51 @@ export default {
       };
       const params = new URLSearchParams(reqParamObj);
       const backend_request = backend_url + `list?${params}`;
-      console.log(backend_request);
+      //   console.log(backend_request);
       axios.get(backend_request).then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         this.listCache[id] = res.data;
 
-        console.log(this.listId, id);
+        // console.log(this.listId, id);
         if (this.listId == id) {
           this.listItems = this.listCache[id].listItems;
           this.title = this.listCache[id].listTitle;
+          this.isSkipped = this.listCache[id].isSkipped;
         }
       });
     },
     checkboxStatesChanged(state, id) {
+      this.undoLoadDefaultPending = false;
+      this.undoSaveDefaultPending = false;
       this.listItems[id].isDone = state;
-      this.sendListUpdateToServer(this.listItems, this.listId);
+      this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
     },
     toggleAll() {
       if (this.isAllDone) this.listItems.forEach((v) => (v.isDone = false));
       else this.listItems.forEach((v) => (v.isDone = true));
-      this.sendListUpdateToServer(this.listItems, this.listId);
+      this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
     },
-    loadDefault() {
-      this.backupItemList = this.listItems;
-
+    toggleSkipped() {
+      this.isSkipped = !this.isSkipped;
+      this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
+      const emitBody = {
+        listId: this.listId,
+        isAllDone: this.isAllDone,
+        isSkipped: this.isSkipped,
+      };
+      this.$emit("listInfoUpdate", emitBody);
+    },
+    loadDefaultClicked(id) {
+      if (this.undoLoadDefaultPending) {
+        this.undoLoadDefaultPending = false;
+        this.undoLoadDefault(id);
+      } else {
+        this.undoSaveDefaultPending = false;
+        this.undoLoadDefaultPending = true;
+        this.loadDefault(id);
+      }
+    },
+    loadDefault(id) {
       this.canceledLoadDefault = false;
       const reqParamObj = {
         id: this.listId,
@@ -99,24 +118,57 @@ export default {
       };
       const params = new URLSearchParams(reqParamObj);
       const backend_request = backend_url + `list?${params}`;
-      console.log(backend_request);
+      //   console.log(backend_request);
       axios.get(backend_request).then((res) => {
-        console.log(res.data);
-        if (!this.canceledLoadDefault) this.listItems = res.data.listItems;
+        // console.log(res.data);
+        this.listCache[id] = res.data;
+        if (!this.canceledLoadDefault && this.listId === id)
+          this.listItems = res.data.listItems;
       });
     },
-    undoLoadDefault() {
-      //TODO this doesn't work with also switching days
-      //TODO make this a server request instead (/also?)
+    undoLoadDefault(id) {
       this.canceledLoadDefault = true;
-      this.listItems = this.backupItemList;
+      const reqParamObj = {
+        id: this.listId,
+        restoreBackup: true,
+      };
+      const params = new URLSearchParams(reqParamObj);
+      const backend_request = backend_url + `list?${params}`;
+      //   console.log(backend_request);
+      axios.get(backend_request).then((res) => {
+        // console.log(res.data);
+        this.listCache[id] = res.data;
+        if (this.listId === id) this.listItems = res.data.listItems;
+      });
     },
-    saveDefault() {
-      this.backupDefaultItemList = this.defaultItems;
-      this.defaultItems = [...this.listItems];
+    saveDefaultClicked(id) {
+      if (this.undoSaveDefaultPending) {
+        this.undoSaveDefaultPending = false;
+        this.undoSaveDefault(id);
+      } else {
+        this.undoLoadDefaultPending = false;
+        this.undoSaveDefaultPending = true;
+        this.saveDefault(id);
+      }
     },
-    undoSaveDefault() {
-      this.defaultItems = this.backupDefaultItemList;
+    saveDefault(id) {
+      const reqParamObj = {
+        id: id,
+        items: this.listCache[id].listItems,
+        newDefault: true,
+      };
+      const backend_request = backend_url + "list";
+      //   console.log(backend_request, reqParamObj);
+      axios.post(backend_request, reqParamObj);
+    },
+    undoSaveDefault(id) {
+      const reqParamObj = {
+        id: id,
+        restoreDefaults: true,
+      };
+      const backend_request = backend_url + "list";
+      //   console.log(backend_request, reqParamObj);
+      axios.post(backend_request, reqParamObj);
     },
   },
   created() {
@@ -130,7 +182,17 @@ export default {
       } else {
         this.listItems = cacheval.listItems;
         this.title = cacheval.listTitle;
+        this.isSkipped = cacheval.isSkipped;
       }
+    },
+    isAllDone(newval, oldval) {
+      console.log("Triggered all done watch: new: ", newval, " old: ", oldval);
+      const emitBody = {
+        listId: this.listId,
+        isAllDone: newval,
+        isSkipped: this.isSkipped,
+      };
+      this.$emit("listInfoUpdate", emitBody);
     },
   },
   computed: {

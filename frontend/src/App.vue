@@ -1,8 +1,14 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png" />
-    <date-browser @dayChosen="dayChosen($event)" />
-    <list-of-lists :dateString="dateString" />
+    <date-browser
+      @dayChosen="dayChosen($event)"
+      :listUpdateInfo="listUpdateInfo"
+    />
+    <list-of-lists
+      :dateString="dateString"
+      @listInfoUpdate="listInfoUpdate($event)"
+    />
   </div>
 </template>
 
@@ -22,6 +28,7 @@ export default {
   data() {
     return {
       dateString: this.currentDayID(),
+      listUpdateInfo: {},
     };
   },
   methods: {
@@ -35,7 +42,10 @@ export default {
     },
     dayChosen(day) {
       this.dateString = day;
-      console.log("received dayChosen: ", day, this.dateString);
+      //   console.log("received dayChosen: ", day, this.dateString);
+    },
+    listInfoUpdate(info) {
+      this.listUpdateInfo = info;
     },
   },
 };

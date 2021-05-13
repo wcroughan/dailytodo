@@ -1,7 +1,7 @@
 
 <template>
   <button class="date-element" @click="$emit('click')">
-    {{ displayText }}{{ isDone }}
+    {{ displayText }}<br />Done: {{ isDone }}<br />Skipped: {{ isSkipped }}
   </button>
 </template>
 
@@ -12,6 +12,7 @@ export default {
   props: {
     displayText: String,
     isDone: Boolean,
+    isSkipped: Boolean,
   },
   data() {
     return {};

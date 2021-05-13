@@ -1,6 +1,11 @@
 <template>
   <div class="list-of-lists">
-    <todo-list v-for="(list, idx) in listIds" :listId="list" :key="idx" />
+    <todo-list
+      v-for="(list, idx) in listIds"
+      :listId="list"
+      :key="idx"
+      @listInfoUpdate="listInfoUpdate($event)"
+    />
   </div>
 </template>
 
@@ -11,6 +16,7 @@ export default {
   props: {
     dateString: String,
   },
+  emits: ["listInfoUpdate"],
   data() {
     return {};
   },
@@ -28,7 +34,7 @@ export default {
       const day = d.getDay();
       const diff = d.getDate() - day + 1;
       const mon = new Date(d.setDate(diff));
-      console.log(day, diff, mon);
+      //   console.log(day, diff, mon);
       const monstr =
         mon.getFullYear() +
         ("0" + (mon.getMonth() + 1)).slice(-2) +
@@ -38,6 +44,11 @@ export default {
     },
   },
   components: { TodoList },
+  methods: {
+    listInfoUpdate(info) {
+      this.$emit("listInfoUpdate", info);
+    },
+  },
 };
 </script>
 

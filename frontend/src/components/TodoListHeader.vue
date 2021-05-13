@@ -4,7 +4,6 @@
       <h3>{{ title }}</h3>
     </div>
     <div class="todo-list-header-details">
-      {{ timeRemainingStr }}<br />
       {{ numRemaining }}/{{ numItems }} Remaining
     </div>
   </div>
@@ -15,18 +14,13 @@ export default {
   name: "TodoListHeader",
   props: {
     title: String,
-    deadline: Object,
     numRemaining: Number,
     numItems: Number,
   },
   data() {
     return {};
   },
-  computed: {
-    timeRemainingStr() {
-      return "test 4 hours left";
-    },
-  },
+  computed: {},
 };
 </script>
 

@@ -36,7 +36,7 @@ export default {
   },
   methods: {
     changeFunc(arg) {
-      console.log("changefunc, new state should be ", arg.target.checked);
+      //   console.log("changefunc, new state should be ", arg.target.checked);
       this.$emit("update:modelValue", arg.target.checked);
     },
   },

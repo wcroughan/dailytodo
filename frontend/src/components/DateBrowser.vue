@@ -4,6 +4,7 @@
     <date-element
       v-for="week in currentlyDisplayedWeeks"
       :isDone="week.isDone"
+      :isSkipped="week.isSkipped"
       :displayText="week.displayText"
       :key="week.id"
       @click="weekClicked(week.id)"
@@ -12,6 +13,7 @@
     <date-element
       v-for="day in currentlyDisplayedDays"
       :isDone="day.isDone"
+      :isSkipped="day.isSkipped"
       :displayText="day.displayText"
       :key="day.id"
       @click="dayClicked(day.id)"
@@ -29,7 +31,40 @@ import { backend_url } from "./dtConstants";
 export default {
   components: { DateElement },
   name: "DateBrowser",
+  props: {
+    listUpdateInfo: Object,
+  },
   emits: ["dayChosen"],
+  watch: {
+    listUpdateInfo(newval) {
+      console.log("Triggered list update watch with val ", newval);
+      //update locally
+      let upob;
+      let id;
+      let url_suf;
+      if (newval.listId.split("_")[0] === "weekly") {
+        upob = this.weeks;
+        id = "week_" + newval.listId.split("_")[1];
+        url_suf = "weeks_info";
+      } else {
+        upob = this.days;
+        id = "day_" + newval.listId.split("_")[1];
+        url_suf = "days_info";
+      }
+      upob[id].isDone = newval.isAllDone;
+      upob[id].isSkipped = newval.isSkipped;
+
+      //send server update
+      const reqParamObj = {
+        data: upob[id],
+      };
+      const backend_request = backend_url + url_suf;
+      console.log(id, url_suf, reqParamObj);
+      axios.put(backend_request, reqParamObj).then((res) => {
+        console.log(res);
+      });
+    },
+  },
   data() {
     return {
       numDisplayedWeeks: 5,
