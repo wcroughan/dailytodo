@@ -192,7 +192,7 @@ export default {
     itemRemoved(item) {
       this.undoLoadDefaultPending = false;
       this.undoSaveDefaultPending = false;
-      console.log("Got request to delete item ", item);
+      //   console.log("Got request to delete item ", item);
       for (let i = 0; i < this.listItems.length; i++) {
         if (this.listItems[i].id === item) {
           this.listItems.splice(i, 1);
@@ -200,7 +200,7 @@ export default {
         }
       }
       this.$forceUpdate(this.nextItemID);
-      console.log("List items is now ", this.listItems);
+      //   console.log("List items is now ", this.listItems);
       this.sendListUpdateToServer(this.listItems, this.listId, this.isSkipped);
     },
   },
@@ -220,8 +220,8 @@ export default {
         this.isSkipped = cacheval.isSkipped;
       }
     },
-    isAllDone(newval, oldval) {
-      console.log("Triggered all done watch: new: ", newval, " old: ", oldval);
+    isAllDone(newval) {
+      //   console.log("Triggered all done watch: new: ", newval, " old: ", oldval);
       const emitBody = {
         listId: this.listId,
         isAllDone: newval,
@@ -243,7 +243,7 @@ export default {
     nextItemID() {
       const idlist = this.listItems.map((v) => v.id);
       const ret = Math.max(...idlist) + 1;
-      console.log("next item id: ", ret, " based on list ", idlist);
+      //   console.log("next item id: ", ret, " based on list ", idlist);
       return ret;
     },
   },
