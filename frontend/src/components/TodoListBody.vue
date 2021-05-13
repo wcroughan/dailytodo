@@ -27,7 +27,11 @@ export default {
   },
   methods: {
     checkboxUpdate(checkBoxState, id) {
-      this.$emit("checkboxStatesChanged", checkBoxState, id);
+      const emitBody = {
+        id: id,
+        checkBoxState: checkBoxState,
+      };
+      this.$emit("checkboxStatesChanged", emitBody);
     },
     addItem(item) {
       this.$emit("itemAdded", item);
