@@ -45,6 +45,23 @@ export default {
   },
   components: { TodoListHeader, TodoListBody, TodoListFooter },
   methods: {
+    sendListUpdateToServer(items, id) {
+      this.listCache[id].listItems = items;
+      //   const reqParamObj = {
+      // data: this.listCache[id],
+      //   };
+      const reqParamObj = { test: true };
+      //   const config = { headers: { "Access-Control-Allow-Origin": "*" } };
+      //   const params = new URLSearchParams(reqParamObj);
+      //   const backend_request = backend_url + `list?${params}`;
+      //   const backend_request = backend_url + "list/" + id;
+      const backend_request = backend_url + "list";
+      console.log(backend_request);
+      console.log(reqParamObj);
+      axios.put(backend_request, reqParamObj).then((res) => {
+        console.log(res.data);
+      });
+    },
     requestListFromServer(id) {
       const reqParamObj = {
         id: id,
@@ -65,10 +82,12 @@ export default {
     },
     checkboxStatesChanged(state, id) {
       this.listItems[id].isDone = state;
+      this.sendListUpdateToServer(this.listItems, this.listId);
     },
     toggleAll() {
       if (this.isAllDone) this.listItems.forEach((v) => (v.isDone = false));
       else this.listItems.forEach((v) => (v.isDone = true));
+      this.sendListUpdateToServer(this.listItems, this.listId);
     },
     loadDefault() {
       this.backupItemList = this.listItems;
@@ -76,7 +95,7 @@ export default {
       this.canceledLoadDefault = false;
       const reqParamObj = {
         id: this.listId,
-        default: true,
+        replaceWithDefault: true,
       };
       const params = new URLSearchParams(reqParamObj);
       const backend_request = backend_url + `list?${params}`;
@@ -88,6 +107,7 @@ export default {
     },
     undoLoadDefault() {
       //TODO this doesn't work with also switching days
+      //TODO make this a server request instead (/also?)
       this.canceledLoadDefault = true;
       this.listItems = this.backupItemList;
     },

@@ -1,21 +1,6 @@
 var ObjectID = require('mongodb').ObjectID;
 
 module.exports = function (app, db) {
-    app.get('/lists/:id', (req, res) => {
-        const id = req.params.id;
-        console.log("Received get request for id: ", id);
-        const details = { '_id': new ObjectID(id) };
-        db.collection("notes").findOne(details, (err, item) => {
-            if (err) {
-                console.log(err);
-                res.send({ 'error': "error occured" });
-            } else {
-                res.send(item);
-            }
-
-        });
-    });
-
     app.get('/weeks_info', (req, res) => {
         console.log("Received week get request", req.query);
 
@@ -42,6 +27,7 @@ module.exports = function (app, db) {
         db.collection("weeks_info").find(filterDetail, (err, cursor) => {
             if (err) {
                 console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send({ 'error': "error occured" });
 
             } else {
@@ -90,6 +76,7 @@ module.exports = function (app, db) {
         db.collection("days_info").find(filterDetail, (err, cursor) => {
             if (err) {
                 console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send({ 'error': "error occured" });
 
             } else {
@@ -112,8 +99,6 @@ module.exports = function (app, db) {
 
     });
 
-
-
     app.get('/list', (req, res) => {
         console.log("Received list get request", req.query);
 
@@ -128,7 +113,7 @@ module.exports = function (app, db) {
             id: "default"
         };
 
-        if (req.query.default === undefined || req.query.default === false) {
+        if (req.query.replaceWithDefault === undefined || req.query.replaceWithDefault === false) {
             // Has a specific list in mind, doesn't want default. Check to see if exists
             const filterDetail = {
                 id: req.query.id
@@ -136,6 +121,7 @@ module.exports = function (app, db) {
             db.collection(colName).findOne(filterDetail, (err, item) => {
                 if (err) {
                     console.log(err);
+                    res.header("Access-Control-Allow-Origin", "*");
                     res.send({ 'error': "error occured" });
                 } else {
                     console.log("Mongo sent back this:", item);
@@ -147,6 +133,7 @@ module.exports = function (app, db) {
                         db.collection(colName).findOne(defaultFilterDetail, (derr, ditem) => {
                             if (derr) {
                                 console.log(derr);
+                                res.header("Access-Control-Allow-Origin", "*");
                                 res.send({ 'error': "error occured" });
                             } else {
                                 console.log("Got default  as backup: ", ditem);
@@ -165,10 +152,14 @@ module.exports = function (app, db) {
                 }
             });
         } else {
+            // Want to replace this with the default list. Move old one to backup and return default list
+            //TODO update old one
+
             db.collection(colName).findOne(defaultFilterDetail, (derr, ditem) => {
                 if (derr) {
 
                     console.log(derr);
+                    res.header("Access-Control-Allow-Origin", "*");
                     res.send({ 'error': "error occured" });
                 } else {
                     console.log("Got default  as backup: ", ditem);
@@ -185,14 +176,65 @@ module.exports = function (app, db) {
     });
 
 
+    app.put('/list', (req, res) => {
+        console.log("received update request: ", req.query);
+
+        const details = { 'id': new ObjectID(req.query.data.id) };
+        const entry = {
+            $set: {
+                ...req.query.data
+            }
+        };
+        const options = {
+            upsert: true
+        };
+
+        let colName = "days_list";
+        let category = "daily";
+        if (req.query.data.id.split('_')[0] === "weekly") {
+            colName = "weeks_list";
+            category = "weekly";
+        }
+
+        db.collection(colName).updateOne(details, entry, options, (err) => {
+            if (err) {
+                console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
+                res.send({ 'error': "error occured" });
+            } else {
+                res.header("Access-Control-Allow-Origin", "*");
+                res.send({ success: true });
+            }
+        });
+    });
+
+    app.put('/lists/:id', (req, res) => {
+        console.log("in unused put func");
+        const id = req.params.id;
+        const details = { '_id': new ObjectID(id) };
+        const note = { title: req.body.title, body: req.body.body };
+        db.collection("notes").updateOne(details, note, (err) => {
+            if (err) {
+                console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
+                res.send({ 'error': "error occured" });
+            } else {
+                res.header("Access-Control-Allow-Origin", "*");
+                res.send(note);
+            }
+        });
+    });
 
     app.post('/lists', (req, res) => {
+        console.log("in unused post func");
         const note = { title: req.body.title, body: req.body.body };
         db.collection("notes").insertOne(note, (err, result) => {
             if (err) {
                 console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send({ 'error': "error occured" });
             } else {
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send(result.ops[0]);
             }
 
@@ -200,33 +242,22 @@ module.exports = function (app, db) {
     });
 
     app.delete('/lists/:id', (req, res) => {
+        console.log("in unused delete func");
         const id = req.params.id;
         const details = { '_id': new ObjectID(id) };
         db.collection("notes").deleteOne(details, (err, item) => {
             if (err) {
                 console.log(err);
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send({ 'error': "error occured" });
             } else {
+                res.header("Access-Control-Allow-Origin", "*");
                 res.send('deleted ' + id + ' successfully');
             }
 
         });
     });
 
-    app.put('/lists/:id', (req, res) => {
-        const id = req.params.id;
-        const details = { '_id': new ObjectID(id) };
-        const note = { title: req.body.title, body: req.body.body };
-        db.collection("notes").updateOne(details, note, (err) => {
-            if (err) {
-                console.log(err);
-                res.send({ 'error': "error occured" });
-            } else {
-                res.send(note);
-            }
-
-        });
-    });
 
 };
 
