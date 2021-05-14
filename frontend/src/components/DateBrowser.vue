@@ -6,6 +6,7 @@
       :isDone="week.isDone"
       :isSkipped="week.isSkipped"
       :displayText="week.displayText"
+      :isSelected="week.id == selectedWeekId"
       :key="week.id"
       @click="weekClicked(week.id)"
     />
@@ -15,6 +16,7 @@
       :isDone="day.isDone"
       :isSkipped="day.isSkipped"
       :displayText="day.displayText"
+      :isSelected="day.id == selectedDayId"
       :key="day.id"
       @click="dayClicked(day.id)"
     />
@@ -70,6 +72,8 @@ export default {
       numDisplayedWeeks: 5,
       centerWeekDate: this.getCurrentMonday(),
       selectedWeekDate: this.getCurrentMonday(),
+      selectedWeekId: this.weekIdFromDate(this.getCurrentMonday()),
+      selectedDayId: this.getCurrentDayId(),
       weeks: {},
       outstandingWeeks: [],
       outstandingDays: [],
@@ -120,6 +124,9 @@ export default {
         ("0" + (dateobj.getMonth() + 1)).slice(-2) +
         ("0" + dateobj.getDate()).slice(-2)
       );
+    },
+    getCurrentDayId() {
+      return "day_" + this.dayIdString(new Date());
     },
     dateFromId(id) {
       let s1 = id;
@@ -239,6 +246,7 @@ export default {
       };
     },
     dayClicked(dayId) {
+      this.selectedDayId = dayId;
       this.$emit("dayChosen", dayId.split("_")[1]);
     },
     weekClicked(weekId) {
@@ -247,6 +255,8 @@ export default {
       const mon = this.getMondayForDate(dfi);
       const ret = this.dayIdString(mon);
       this.selectedWeekDate = mon;
+      this.selectedWeekId = weekId;
+      this.selectedDayId = "day_" + weekId.split("_")[1];
       this.$emit("dayChosen", ret);
     },
   },
